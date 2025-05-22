@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mini-Mental State Examination (MMSE) 点数計算</title>
+  <style>
+    /* 省略（元のスタイルと同じ） */
+    body {
+      font-family: sans-serif;
+      margin: 10px;
+      background-color: #f7f9fc;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    .question-block {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 5px auto;
+      width: 90%;
+      max-width: 600px;
+    }
+    .radio-grid {
+      display: inline-block;
+      margin: 5px 20px;
+      text-align: center;
+    }
+    .radio-labels, .radio-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+    .radio-labels div, .radio-buttons label {
+      width: 2em;
+      text-align: center;
+    }
+    .radio-buttons input[type="radio"] {
+      width: 2em;
+      height: 2em;
+    }
+    .sub-label {
+      text-align: center;
+      margin-bottom: 2px;
+      font-weight: bold;
+      font-size: 0.9em;
+    }
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1.1em;
+      border: none;
+      border-radius: 10px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    button.reset {
+      background-color: #dc3545;
+    }
+    button.reset:hover {
+      background-color: #a71d2a;
+    }
+    .score {
+      font-weight: bold;
+      font-size: 1.4em;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mini-Mental State Examination (MMSE) 点数計算</h1>
+
+  <div style="margin: 20px 0; text-align: center; font-size: 1.5em;">
+    <label for="userId">ID：</label>
+    <input type="text" id="userId" name="userId" placeholder="例: 123456" style="font-size: 1em; padding: 8px; width: 200px;" />
+  </div>
+
+  <form id="mmseForm"></form>
+
+  <div class="button-group">
+    <button type="button" onclick="calculateScore()">点数を計算</button>
+    <button type="button" class="reset" onclick="resetForm()">リセット</button>
+  </div>
+
+  <div class="score" id="result"></div>
+
+  <script>
+    const questionData = [
+      { label: "1. 時間の見当識", name: "q1-", count: 5, max: 1, subs: ["日", "年", "季節", "曜日", "月"] },
+      { label: "2. 場所の見当識", name: "q2-", count: 5, max: 1, subs: ["都道府県", "市町村区", "現在地", "階", "地方"] },
+      { label: "3. 即時想起", name: "q3", max: 3 },
+      { label: "4. 計算", name: "q4", max: 5 },
+      { label: "5. 遅延再生", name: "q5", max: 3 },
+      { label: "6. 物品呼称", name: "q6", max: 2 },
+      { label: "7. 文の復唱", name: "q7", max: 1 },
+      { label: "8. 口頭指示", name: "q8", max: 3 },
+      { label: "9. 書字指示", name: "q9", max: 1 },
+      { label: "10. 自発書字", name: "q10", max: 1 },
+      { label: "11. 図形模写", name: "q11", max: 1 }
+    ];
+
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyLEt4gpWPxPaywAnqsYHhkHllS1i3Mc7LtqR2vo_fHEtZkPVtblI6TlIPFuNTMJAS_Wg/exec';
+
+    function createQuestions() {
+      const form = document.getElementById("mmseForm");
+      questionData.forEach(q => {
+        const block = document.createElement("div");
+        block.className = "question-block";
+
+        const title = document.createElement("h3");
+        title.textContent = q.label;
+        block.appendChild(title);
+
+        if (q.count) {
+          for (let i = 1; i <= q.count; i++) {
+            const subName = `${q.name}${i}`;
+            const subLabel = q.subs[i - 1];
+
+            const grid = document.createElement("div");
+            grid.className = "radio-grid";
+
+            const labelText = document.createElement("div");
+            labelText.className = "sub-label";
+            labelText.textContent = subLabel;
+            grid.appendChild(labelText);
+
+            const labelRow = document.createElement("div");
+            labelRow.className = "radio-labels";
+            for (let j = 0; j <= q.max; j++) {
+              const label = document.createElement("div");
+              label.textContent = j;
+              labelRow.appendChild(label);
+            }
+
+            const buttonRow = document.createElement("div");
+            buttonRow.className = "radio-buttons";
+            for (let j = 0; j <= q.max; j++) {
+              const label = document.createElement("label");
+              label.innerHTML = `<input type="radio" name="${subName}" value="${j}" ${j === 0 ? "checked" : ""}>`;
+              buttonRow.appendChild(label);
+            }
+
+            grid.appendChild(labelRow);
+            grid.appendChild(buttonRow);
+            block.appendChild(grid);
+          }
+        } else {
+          const grid = document.createElement("div");
+          grid.className = "radio-grid";
+
+          const labelRow = document.createElement("div");
+          labelRow.className = "radio-labels";
+          for (let j = 0; j <= q.max; j++) {
+            const label = document.createElement("div");
+            label.textContent = j;
+            labelRow.appendChild(label);
+          }
+
+          const buttonRow = document.createElement("div");
+          buttonRow.className = "radio-buttons";
+          for (let j = 0; j <= q.max; j++) {
+            const label = document.createElement("label");
+            label.innerHTML = `<input type="radio" name="${q.name}" value="${j}" ${j === 0 ? "checked" : ""}>`;
+            buttonRow.appendChild(label);
+          }
+
+          grid.appendChild(labelRow);
+          grid.appendChild(buttonRow);
+          block.appendChild(grid);
+        }
+
+        form.appendChild(block);
+      });
+    }
+
+    async function calculateScore() {
+      const userId = document.getElementById('userId').value.trim();
+      if (!userId) {
+        alert('IDを入力してください。');
+        return;
+      }
+
+      const form = document.getElementById('mmseForm');
+      let total = 0;
+      const inputs = form.querySelectorAll('input[type="radio"]:checked');
+      inputs.forEach(input => {
+        total += parseInt(input.value) || 0;
+      });
+
+      let judgment = "";
+      if (total >= 27) {
+        judgment = "異常なし";
+      } else if (total >= 22) {
+        judgment = "軽度認知症の疑いあり";
+      } else {
+        judgment = "どちらかというと認知症の疑いが強い";
+      }
+
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = `ID: ${userId}<br>合計点: ${total} 点 / 30 点<br>判定: ${judgment}`;
+      resultDiv.scrollIntoView({ behavior: "smooth" });
+
+      await submitToGoogleSheet(userId, total, judgment);
+    }
+
+    function resetForm() {
+      const form = document.getElementById('mmseForm');
+      const inputs = form.querySelectorAll('input[type="radio"]');
+      inputs.forEach(input => {
+        input.checked = (input.value === "0");
+      });
+      document.getElementById('userId').value = '';
+      document.getElementById('result').textContent = '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function submitToGoogleSheet(userId, total, evaluation) {
+      const form = document.getElementById('mmseForm');
+      const inputs = form.querySelectorAll('input[type="radio"]:checked');
+
+      const formData = new FormData();
+      formData.append('userId', userId);
+      formData.append('total', total);
+      formData.append('evaluation', evaluation);
+
+      // ラジオボタンの名前と値をformDataに追加
+      inputs.forEach(input => {
+        formData.append(input.name, input.value);
+      });
+
+      try {
+        const response = await fetch(scriptURL, {
+          method: "POST",
+          body: formData
+          // headersはContent-Typeを指定しない（自動で multipart/form-data になる）
+        });
+
+        const text = await response.text();
+        if (text.trim() === "OK") {
+          alert('送信が完了しました。');
+        } else {
+          alert('送信に失敗しました。サーバー応答：' + text);
+        }
+      } catch (error) {
+        console.error(error);
+        alert('送信エラー：' + error.message);
+      }
+    }
+
+    createQuestions();
+  </script>
+</body>
+</html>

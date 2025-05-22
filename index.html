@@ -3,14 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mini-Mental State Examination (MMSE) 点数計算</title>
+  <title>MMSEチェック</title>
   <style>
-    /* 省略（元のスタイルと同じ） */
     body {
       font-family: sans-serif;
       margin: 10px;
       background-color: #f7f9fc;
       text-align: center;
+    }
+    .hidden {
+      display: none;
     }
     h1 {
       margin-bottom: 10px;
@@ -77,24 +79,42 @@
       font-size: 1.4em;
       margin-top: 20px;
     }
+    input[type="email"] {
+      padding: 10px;
+      font-size: 1.1em;
+      width: 300px;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
-  <h1>Mini-Mental State Examination (MMSE) 点数計算</h1>
 
-  <div style="margin: 20px 0; text-align: center; font-size: 1.5em;">
-    <label for="userId">ID：</label>
-    <input type="text" id="userId" name="userId" placeholder="例: 123456" style="font-size: 1em; padding: 8px; width: 200px;" />
+  <!-- ログイン画面 -->
+  <div id="loginPage">
+    <h1>MMSEチェック</h1>
+    <input type="email" id="emailInput" placeholder="メールアドレスを入力" />
+    <p>※指定のメールアドレス以外はデータベースに書き込めません！</p>
+    <button onclick="goToMMSE()">次へ</button>
   </div>
 
-  <form id="mmseForm"></form>
+  <!-- MMSEフォーム画面 -->
+  <div id="mmsePage" class="hidden">
+    <h1>Mini-Mental State Examination (MMSE) 点数計算</h1>
 
-  <div class="button-group">
-    <button type="button" onclick="calculateScore()">点数を計算</button>
-    <button type="button" class="reset" onclick="resetForm()">リセット</button>
+    <div style="margin: 20px 0; text-align: center; font-size: 1.5em;">
+      <label for="userId">ID：</label>
+      <input type="text" id="userId" name="userId" placeholder="例: 123456" style="font-size: 1em; padding: 8px; width: 200px;" />
+    </div>
+
+    <form id="mmseForm"></form>
+
+    <div class="button-group">
+      <button type="button" onclick="calculateScore()">点数を計算</button>
+      <button type="button" class="reset" onclick="resetForm()">リセット</button>
+    </div>
+
+    <div class="score" id="result"></div>
   </div>
-
-  <div class="score" id="result"></div>
 
   <script>
     const questionData = [
@@ -112,6 +132,17 @@
     ];
 
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyLEt4gpWPxPaywAnqsYHhkHllS1i3Mc7LtqR2vo_fHEtZkPVtblI6TlIPFuNTMJAS_Wg/exec';
+
+    function goToMMSE() {
+      const email = document.getElementById('emailInput').value;
+      const query = email ? `?email=${encodeURIComponent(email)}` : '';
+      window.location.href = window.location.pathname + query;
+    }
+
+    function getEmailFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('email') || '';
+    }
 
     function createQuestions() {
       const form = document.getElementById("mmseForm");
@@ -231,11 +262,12 @@
       const inputs = form.querySelectorAll('input[type="radio"]:checked');
 
       const formData = new FormData();
+      const email = getEmailFromURL();
       formData.append('userId', userId);
       formData.append('total', total);
       formData.append('evaluation', evaluation);
+      formData.append('email', email);
 
-      // ラジオボタンの名前と値をformDataに追加
       inputs.forEach(input => {
         formData.append(input.name, input.value);
       });
@@ -244,7 +276,6 @@
         const response = await fetch(scriptURL, {
           method: "POST",
           body: formData
-          // headersはContent-Typeを指定しない（自動で multipart/form-data になる）
         });
 
         const text = await response.text();
@@ -259,7 +290,14 @@
       }
     }
 
-    createQuestions();
+    // 初期処理：URLにemailがあるかでページ切り替え
+    window.onload = () => {
+      if (window.location.search.includes("email") || window.location.search.length > 0) {
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('mmsePage').classList.remove('hidden');
+        createQuestions();
+      }
+    };
   </script>
 </body>
 </html>

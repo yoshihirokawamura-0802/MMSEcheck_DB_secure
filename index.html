@@ -79,7 +79,7 @@
       font-size: 1.4em;
       margin-top: 20px;
     }
-    input[type="email"] {
+    input[type="password"] {
       padding: 10px;
       font-size: 1.1em;
       width: 300px;
@@ -92,8 +92,8 @@
   <!-- ログイン画面 -->
   <div id="loginPage">
     <h1>MMSEチェック</h1>
-    <input type="email" id="emailInput" placeholder="メールアドレスを入力" />
-    <p>※指定のメールアドレス以外はデータベースに書き込めません！</p>
+    <input type="password" id="passwordInput" placeholder="パスワードを入力" />
+    <p>※指定のパスワード以外はデータベースに書き込めません！</p>
     <button onclick="goToMMSE()">次へ</button>
   </div>
 
@@ -131,17 +131,18 @@
       { label: "11. 図形模写", name: "q11", max: 1 }
     ];
 
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwUv905gnDEulaQzi8JY6jVTS3K_uREytlH82CoyyamhH2SiJdJ03Se4-l_sAcuKOo3jQ/exec';
+    //スプレッドシート
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyX-lkqI8_bGFYlRQhOHScJ6VdZLDx_LO_KAJALHh-z65C_PNEvTMAnA_mx1DN47YNcIw/exec';
 
     function goToMMSE() {
-      const email = document.getElementById('emailInput').value;
-      const query = email ? `?email=${encodeURIComponent(email)}` : '';
+      const password = document.getElementById('passwordInput').value;
+      const query = password ? `?password=${encodeURIComponent(password)}` : '';
       window.location.href = window.location.pathname + query;
     }
 
-    function getEmailFromURL() {
+    function getpasswordFromURL() {
       const params = new URLSearchParams(window.location.search);
-      return params.get('email') || '';
+      return params.get('password') || '';
     }
 
     function createQuestions() {
@@ -216,6 +217,7 @@
       });
     }
 
+    //点数の計算
     async function calculateScore() {
       const userId = document.getElementById('userId').value.trim();
       if (!userId) {
@@ -232,11 +234,11 @@
 
       let judgment = "";
       if (total >= 27) {
-        judgment = "異常なし";
+        judgment = "物忘れの心配はなさそうです";
       } else if (total >= 22) {
-        judgment = "軽度認知症の疑いあり";
+        judgment = "少し物忘れが気になるかもしれません";
       } else {
-        judgment = "どちらかというと認知症の疑いが強い";
+        judgment = "記憶力が少し弱くなっているようです。早めに相談してみましょう";
       }
 
       const resultDiv = document.getElementById('result');
@@ -246,6 +248,7 @@
       await submitToGoogleSheet(userId, total, judgment);
     }
 
+    //フォームを初期状態に戻す
     function resetForm() {
       const form = document.getElementById('mmseForm');
       const inputs = form.querySelectorAll('input[type="radio"]');
@@ -257,16 +260,17 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    //google スプレッドシートにデータを送る
     async function submitToGoogleSheet(userId, total, evaluation) {
       const form = document.getElementById('mmseForm');
       const inputs = form.querySelectorAll('input[type="radio"]:checked');
 
       const formData = new FormData();
-      const email = getEmailFromURL();
+      const password = getpasswordFromURL();
       formData.append('userId', userId);
       formData.append('total', total);
       formData.append('evaluation', evaluation);
-      formData.append('email', email);
+      formData.append('password', password);
 
       inputs.forEach(input => {
         formData.append(input.name, input.value);
@@ -290,9 +294,9 @@
       }
     }
 
-    // 初期処理：URLにemailがあるかでページ切り替え
+    // 初期処理：URLにpasswordがあるかでページ切り替え
     window.onload = () => {
-      if (window.location.search.includes("email") || window.location.search.length > 0) {
+      if (window.location.search.includes("password") || window.location.search.length > 0) {
         document.getElementById('loginPage').classList.add('hidden');
         document.getElementById('mmsePage').classList.remove('hidden');
         createQuestions();
